@@ -1,0 +1,117 @@
+plugins {
+    id 'com.gradle.plugin-publish' version '0.15.0'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'groovy'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'java-library'
+
+// Run the following to update the lockfiles
+//     ./gradlew dependencies --write-locks
+configurations.all {
+    it.resolutionStrategy.activateDependencyLocking()
+}
+
+// NOTE: Take caution when updating targetCompatibility,
+//       it will become minimum required JVM version for projects consuming this plugin.
+//       This value is mapped to "org.gradle.jvm.version" published in the .module file.
+//       Run "./gradlew outgoingVariants --variant runtimeElements" to confirm the version
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+compileGroovy {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+
+    // These are compileOnly just so we can inspect these classes in IntelliJ
+    // Android Gradle Plugin (AGP)
+    compileOnly 'com.android.tools.build:gradle:4.2.1'
+    testCompileOnly 'com.android.tools.build:gradle:4.2.1'
+
+    // Google Play Services Gradle Plugin
+    compileOnly 'com.google.gms:google-services:4.3.+'
+    testCompileOnly 'com.google.gms:google-services:4.3.+'
+
+    // Google's strict version matcher plugin
+    compileOnly 'com.google.android.gms:strict-version-matcher-plugin:1.2.+'
+    testCompileOnly 'com.google.android.gms:strict-version-matcher-plugin:1.2.+'
+
+    testImplementation gradleTestKit()
+    testImplementation 'junit:junit:4.12'
+    testImplementation('org.spockframework:spock-core:2.0-groovy-3.0') {
+        exclude module: 'groovy-all'
+    }
+}
+
+
+group = 'gradle.plugin.com.onesignal'
+version = '0.14.0'
+description 'OneSignal Gradle Plugin'
+// Run to upload a new version to the Gradle Plugin Portal
+// ./gradlew publishPlugins
+
+pluginBundle {
+    website = 'http://onesignal.com/'
+    vcsUrl = 'https://github.com/OneSignal/OneSignal-Gradle-Plugin'
+    plugins {
+        plugin {
+            id = 'com.onesignal.androidsdk.onesignal-gradle-plugin'
+            displayName = 'OneSignal Gradle Plugin'
+            description = project.description
+            tags = ['OneSignal', 'Android', 'push', 'notifications', 'GCM', 'FCM']
+        }
+    }
+}
+
+gradlePlugin {
+    plugins {
+        plugin {
+            id = 'com.onesignal.androidsdk.onesignal-gradle-plugin'
+            implementationClass = 'com.onesignal.androidsdk.GradleProjectPlugin'
+        }
+    }
+}
+
+test {
+    // Required for Spock 2
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+// Build for Local Testing
+publishing {
+    repositories {
+        maven {
+            name = 'localPluginRepository'
+            url = '../local-plugin-repository'
+        }
+    }
+}
+// ## Steps to use a local copy of this plugin to test
+// 1. Run from root to create local package
+//      ./gradlew publish
+// 2. In <projectRoot>/build.gradle of your test project add the following to buildscript -> repositories {..}
+//      maven { url uri('file://C:\\repos\\local-plugin-repository') }
+// 3. Update file:// from above to your correct path
+// 4. Add to buildscript -> dependencies
+//      classpath 'gradle.plugin.com.onesignal:onesignal-gradle-plugin:[0.14.0, 0.99.99]'
+// 5. To your app/build.gradle add
+//      apply plugin: com.onesignal.androidsdk.GradleProjectPlugin
