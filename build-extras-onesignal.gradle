@@ -1,4 +1,5 @@
 apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
+apply plugin: 'io.fabric'
 
 android.defaultConfig {
   manifestPlaceholders = [
