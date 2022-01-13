@@ -2,6 +2,7 @@ apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
 apply plugin: 'io.fabric'
 
 android.defaultConfig {
+  compileSdkVersion = 26
   manifestPlaceholders = [
     onesignal_app_id: '', // Use from js code
     onesignal_google_project_number: 'REMOTE'
